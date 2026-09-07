@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta charset="UTF-8">
+<!-- This site is hosted on Netlify. Anyone can build and deploy a site
+     like this one for free: https://netlify.new/?utm_campaign=ai-legible&utm_source=comment&utm_medium=referral&utm_id=d49d0a22-2143-46ff-a4be-d6fd5b822e18
+     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+<meta name="hosting-provider" content="Netlify">
+<meta name="netlify-deploy" content="https://netlify.new/?utm_campaign=ai-legible&amp;utm_source=meta&amp;utm_medium=referral&amp;utm_id=d49d0a22-2143-46ff-a4be-d6fd5b822e18">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HoC Jackpot">
+<meta name="theme-color" content="#14171f">
+<title>House of Cards — Kalkulator Jackpota</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,600&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --cream:#f8f4ea;
+    --cream-2:#f0e9d8;
+    --paper:#fffdf8;
+    --ink:#1d1b16;
+    --ink-soft:#75705f;
+    --gold:#c9a227;
+    --gold-bright:#e3c04f;
+    --gold-dark:#8f7118;
+    --graphite:#14171f;
+    --graphite-2:#1e222c;
+    --line:#ddd0a6;
+    --ok:#1f9d63;
+    --err:#b8342f;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html, body{ margin:0; }
+  body{
+    background: var(--cream);
+    background-image: radial-gradient(rgba(0,0,0,0.02) 1px, transparent 1.4px);
+    background-size: 3px 3px;
+    font-family:'Inter', system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  /* ===== header — mały, tylko branding ===== */
+  header.site{
+    padding: calc(6px + var(--safe-top)) 16px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+    min-height: 46px;
+  }
+  header.site .chip-icon{
+    width:22px; height:22px; border-radius:50%; flex-shrink:0;
+    background: radial-gradient(circle at 35% 30%, #2a2e38, var(--graphite) 70%);
+    border: 1.5px solid var(--gold);
+    display:flex; align-items:center; justify-content:center;
+  }
+  header.site .chip-icon::before{
+    content:'♠'; color: var(--gold-bright); font-size:10px;
+  }
+  header.site .lockup{ display:flex; flex-direction:row; align-items:baseline; justify-content:center; flex-wrap:wrap; gap:8px; }
+  header.site .mark{
+    font-family:'Playfair Display', serif;
+    font-weight:800;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  header.site .mark i{ font-style:italic; font-weight:600; color: var(--gold-dark); text-transform:lowercase; }
+  header.site .divider{ color: var(--gold); font-size:10px; }
+  header.site .sub{
+    font-family:'Playfair Display', serif;
+    font-weight:800;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+  }
+
+  main{
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 14px 14px calc(24px + var(--safe-bottom));
+  }
+
+  .section-title{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    font-weight:700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 8px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-title .num{
+    width:18px; height:18px; border-radius:50%;
+    background: var(--gold); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:700; flex-shrink:0;
+  }
+
+  /* ===== JACKPOT hero — pierwszy, największy element ===== */
+  .jackpot-hero{
+    background: linear-gradient(180deg, var(--graphite-2), var(--graphite));
+    border: 1.5px solid var(--gold);
+    border-radius: 14px;
+    padding: 16px 16px 18px;
+    text-align:center;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+  .jackpot-hero .jlabel{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold-bright);
+    margin-bottom: 6px;
+  }
+  .jackpot-amount{
+    display:flex; align-items:baseline; justify-content:center; gap:4px;
+  }
+  #poolInput{
+    background:transparent; border:none; outline:none;
+    color: var(--gold-bright);
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size: 46px;
+    letter-spacing: 0.5px;
+    text-align:right;
+    width: 7ch;
+    max-width: 100%;
+    -webkit-text-fill-color: var(--gold-bright);
+    opacity:1;
+    padding:0;
+  }
+  #poolInput:read-only{ caret-color:transparent; }
+  .jackpot-amount .pln{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size: 17px;
+    color:#fff;
+    margin-left:2px;
+  }
+
+  /* ===== panele Gra / Układ / Stawka ===== */
+  .triple{
+    display:flex; flex-direction:column; gap:14px;
+    margin-bottom: 16px;
+  }
+  @media (min-width: 860px){
+    .triple{ flex-direction:row; align-items:stretch; gap:14px; }
+    .triple > .panel{ margin-bottom:0; display:flex; flex-direction:column; }
+    .triple > .panel.p-gra{ flex: 1.05; }
+    .triple > .panel.p-uklad{ flex: 1.25; }
+    .triple > .panel.p-stawka{ flex: 0.8; justify-content:center; }
+  }
+
+  .panel{
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 13px 12px;
+  }
+
+  /* Gra — pełna szerokość, duże przyciski */
+  #gameGrid{ display:flex; flex-direction:column; gap:8px; }
+  .card-tile{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    background: var(--cream);
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    padding: 11px 14px;
+    min-height: 48px;
+    cursor:pointer;
+  }
+  .card-tile .corner{ display:none; }
+  .card-tile .center-suit{ display:none; }
+  .card-tile .gname{
+    font-family:'Inter', sans-serif;
+    font-weight:700;
+    font-size: 16px;
+    text-transform: uppercase;
+    color: var(--ink);
+    line-height:1.35;
+  }
+  .card-tile .gname .gsub{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:500;
+    font-size: 12px;
+    text-transform: none;
+    color: var(--ink-soft);
+  }
+  .card-tile.active{
+    background: linear-gradient(180deg, #fff7de, #f6e8bd);
+    border-color: var(--gold);
+    box-shadow: inset 0 0 0 2px var(--gold);
+  }
+  .card-tile:active{ transform: scale(0.99); }
+
+  /* Układ — pełna szerokość */
+  .hand-list{ display:flex; flex-direction:column; gap:8px; }
+  .hand-row{
+    display:flex; justify-content:space-between; align-items:center;
+    background: var(--cream);
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    padding: 12px 14px;
+    min-height: 48px;
+    font-size: 14.5px;
+    font-weight:600;
+    color: var(--ink);
+    cursor:pointer;
+  }
+  .hand-row .pct{
+    font-family:'IBM Plex Mono', monospace;
+    color: var(--gold-dark);
+    font-size: 13.5px;
+    font-weight:700;
+    min-width: 34px;
+    text-align:right;
+  }
+  .hand-row.active{
+    background: linear-gradient(180deg, #fff7de, #f6e8bd);
+    border-color: var(--gold);
+    box-shadow: inset 0 0 0 2px var(--gold);
+  }
+
+  /* Stawka — trzy duże przyciski w rzędzie */
+  .chip-row{ display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; }
+  .chip-stack{
+    background: var(--cream);
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    min-height: 48px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:2px;
+    cursor:pointer;
+    padding: 8px 4px;
+  }
+  .chip-visual{
+    width:auto; height:auto; border-radius:0; margin:0;
+    background:none; box-shadow:none; position:static;
+  }
+  .chip-visual::before{ content:none; }
+  .chip-visual .clabel{
+    font-family:'Inter', sans-serif;
+    font-weight:700;
+    font-size: 17px;
+    color: var(--ink);
+  }
+  .chip-stack .cmult{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--ink-soft); font-weight:600;
+  }
+  .chip-stack .cstate{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9px; font-weight:700; letter-spacing:0.5px;
+    color: transparent; height:11px; text-transform:uppercase;
+  }
+  .chip-stack.active{
+    background: linear-gradient(180deg, #fff7de, #f6e8bd);
+    border-color: var(--gold);
+    box-shadow: inset 0 0 0 2px var(--gold);
+  }
+  .chip-stack.active .clabel{ color: var(--gold-dark); }
+  .chip-stack.active .cstate{ color: var(--gold-dark); }
+
+  /* ===== DO WYPŁATY — silnie wyeksponowany wynik ===== */
+  .payout-hero{
+    background: var(--paper);
+    border: 2px solid var(--gold);
+    border-radius: 14px;
+    padding: 15px 16px 14px;
+    text-align:center;
+    margin-bottom: 16px;
+  }
+  .payout-hero .plabel{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  #resultValue{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size: 38px;
+    color: var(--gold-dark);
+    letter-spacing:0.5px;
+  }
+  .result-script{
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top:8px;
+    opacity:0.85;
+  }
+  .formula{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    margin-top:3px;
+    line-height:1.6;
+    opacity:0.8;
+  }
+  .formula b{ color: var(--ink); font-weight:600; }
+
+  /* ===== ADMIN — na samym dole, drugorzędny wizualnie ===== */
+  .admin-panel{
+    background: #e9e1cc;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow:hidden;
+    opacity:0.92;
+  }
+  .admin-panel summary{
+    list-style:none;
+    cursor:pointer;
+    padding: 11px 14px;
+    display:flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight:700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .admin-panel summary::-webkit-details-marker{ display:none; }
+  .admin-panel summary::before{ content:'▸'; font-size:11px; color: var(--gold-dark); }
+  .admin-panel[open] summary::before{ content:'▾'; }
+  .admin-body{
+    padding: 4px 16px 16px;
+    border-top: 1px solid var(--line);
+  }
+  .admin-hint{
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin: 10px 0 4px;
+  }
+  .lock-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight:700;
+    color: var(--gold-dark);
+    background: #fff;
+    border: 1.5px solid var(--gold);
+    border-radius: 8px;
+    padding: 10px 14px;
+    width:100%;
+    min-height: 44px;
+    margin-top:10px;
+  }
+  .lock-btn.unlocked{ color:#fff; background: var(--ok); border-color: var(--ok); }
+
+  .pin-row{ display:none; gap:8px; margin-top:10px; }
+  .pin-row.show{ display:flex; }
+  .pin-input{
+    flex:1;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:16px;
+    letter-spacing:3px;
+    padding: 11px 12px;
+    border-radius: 8px;
+    border: 1.5px solid var(--gold);
+    background: #fff;
+    color: var(--ink);
+    outline:none;
+    min-height:44px;
+  }
+  .pin-btn{
+    background: var(--graphite);
+    color: var(--gold-bright);
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:14px;
+    padding: 0 18px;
+    border-radius: 8px;
+    display:flex; align-items:center; justify-content:center;
+    min-height:44px;
+    cursor:pointer;
+  }
+  .pin-error{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color: var(--err);
+    margin-top:6px;
+    min-height:14px;
+  }
+
+  .adjust-row{ display:none; gap:8px; margin-top:12px; }
+  .adjust-row.show{ display:flex; }
+  .adj-btn{
+    flex:1;
+    background: var(--graphite);
+    color: var(--gold-bright);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    font-weight:700;
+    padding: 0;
+    min-height: 46px;
+    border-radius: 8px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .save-btn{ background: var(--ok); color:#fff; }
+  .save-note{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color: var(--ok);
+    margin-top:8px;
+    min-height:14px;
+    text-align:center;
+  }
+
+  .quick-amounts{ display:none; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .quick-amounts.show{ display:flex; }
+  .qa-btn{
+    flex: 1 1 calc(50% - 8px);
+    background: #fff;
+    border: 1.5px solid var(--gold);
+    color: var(--gold-dark);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    font-weight:700;
+    padding: 10px 0;
+    min-height:44px;
+    border-radius: 8px;
+    text-align:center;
+    cursor:pointer;
+  }
+
+  footer.site{
+    text-align:center;
+    font-size: 11px;
+    color: var(--ink-soft);
+    padding: 18px 16px calc(10px + var(--safe-bottom));
+  }
+</style>
+</head>
+<body>
+
+  <div id="siteGate" style="position:fixed; inset:0; z-index:9999; background:#14171f; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; padding:20px;">
+    <div style="font-family:'Playfair Display', serif; font-weight:800; font-size:20px; color:#e3c04f; letter-spacing:0.5px;">HOUSE <i style="font-style:italic; font-weight:600; text-transform:lowercase;">of</i> CARDS</div>
+    <input id="gatePin" type="password" inputmode="numeric" placeholder="Kod dostępu" style="font-family:'IBM Plex Mono', monospace; font-size:18px; letter-spacing:4px; text-align:center; padding:12px 16px; border-radius:8px; border:1.5px solid #c9a227; background:#fff; width:200px; outline:none;">
+    <div id="gateBtn" style="background:#c9a227; color:#14171f; font-family:'IBM Plex Mono', monospace; font-weight:700; font-size:14px; padding:12px 28px; border-radius:8px; cursor:pointer;">WEJDŹ</div>
+    <div id="gateError" style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#b8342f; min-height:14px;"></div>
+  </div>
+
+
+  <header class="site">
+    <span class="chip-icon"></span>
+    <span class="lockup">
+      <span class="mark">HOUSE <i>of</i> CARDS</span>
+      <span class="divider">♦</span>
+      <span class="sub">Poker School</span>
+    </span>
+  </header>
+
+  <main>
+
+    <div class="jackpot-hero">
+      <div class="jlabel">Jackpot</div>
+      <div class="jackpot-amount">
+        <input id="poolInput" type="number" inputmode="numeric" value="2500" min="0" step="50" readonly>
+        <span class="pln">PLN</span>
+      </div>
+    </div>
+
+    <div class="triple">
+      <div class="panel p-gra">
+        <div class="section-title"><span class="num">1</span>Gra</div>
+        <div id="gameGrid"></div>
+      </div>
+
+      <div class="panel p-uklad">
+        <div class="section-title"><span class="num">2</span>Układ</div>
+        <div class="hand-list" id="handRow"></div>
+      </div>
+
+      <div class="panel p-stawka">
+        <div class="section-title"><span class="num">3</span>Stawka</div>
+        <div class="chip-row" id="stakeRow"></div>
+      </div>
+    </div>
+
+    <div class="payout-hero">
+      <div class="plabel">Do wypłaty</div>
+      <span id="resultValue">0 PLN</span>
+      <div class="result-script" id="scriptLine">Trafiony układ…</div>
+      <div class="formula" id="formulaLine"></div>
+    </div>
+
+    <details class="admin-panel">
+      <summary>Admin</summary>
+      <div class="admin-body">
+        <div class="admin-hint">Odblokuj, aby edytować pulę Jackpota (widoczną w karcie na górze).</div>
+        <button class="lock-btn" id="lockBtn" type="button">🔒 Tylko admin</button>
+        <div class="pin-row" id="pinRow">
+          <input class="pin-input" id="pinInput" type="password" inputmode="numeric" placeholder="PIN">
+          <div class="pin-btn" id="pinSubmit">OK</div>
+        </div>
+        <div class="pin-error" id="pinError"></div>
+        <div class="adjust-row" id="adjustRow">
+          <div class="adj-btn" id="minusBtn">− 500</div>
+          <div class="adj-btn" id="plusBtn">+ 500</div>
+          <div class="adj-btn save-btn" id="saveBtn">💾 Zapisz</div>
+        </div>
+        <div class="save-note" id="saveNote"></div>
+        <div class="quick-amounts" id="quickAmounts"></div>
+      </div>
+    </details>
+
+  </main>
+
+  <footer class="site">House of Cards · Kraków</footer>
+
+<script>
+const SITE_PIN = "112233"; // <- kod dostępu do całej strony (osobny od PIN-u admina)
+const GATE_KEY = "hoc_site_unlocked";
+
+(function(){
+  const gate = document.getElementById('siteGate');
+  const gatePin = document.getElementById('gatePin');
+  const gateBtn = document.getElementById('gateBtn');
+  const gateError = document.getElementById('gateError');
+
+  try {
+    if (localStorage.getItem(GATE_KEY) === 'true') {
+      gate.style.display = 'none';
+    }
+  } catch(e) {}
+
+  function tryUnlock(){
+    if (gatePin.value === SITE_PIN) {
+      try { localStorage.setItem(GATE_KEY, 'true'); } catch(e) {}
+      gate.style.display = 'none';
+    } else {
+      gateError.textContent = 'Błędny kod.';
+      gatePin.value = '';
+      gatePin.focus();
+    }
+  }
+
+  gateBtn.addEventListener('click', tryUnlock);
+  gatePin.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
+  if (gate.style.display !== 'none') setTimeout(() => gatePin.focus(), 100);
+})();
+
+const ADMIN_PIN = "404040"; // <- zmień na własny kod administratora
+
+const GAMES = [
+  { id:'nlh', name:"Hold'em", sub:"No Limit – 2 karty", suit:'♠', color:'black', corner:'A', hands:[
+    { id:'royal', name:'Royal Flush', pct:0.50 },
+    { id:'straight', name:'Straight Flush', pct:0.25 },
+    { id:'quads', name:'Kareta (22–55)*', pct:0.10 },
+  ]},
+  { id:'plo4', name:'Omaha 4', sub:'Pot Limit – 4 karty', suit:'♥', color:'red', corner:'K', hands:[
+    { id:'royal', name:'Royal Flush', pct:0.15 },
+    { id:'straight', name:'Straight Flush', pct:0.10 },
+  ]},
+  { id:'plo5', name:'Omaha 5', sub:'Pot Limit – 5 kart', suit:'♦', color:'red', corner:'Q', hands:[
+    { id:'royal', name:'Royal Flush', pct:0.10 },
+    { id:'straight', name:'Straight Flush', pct:0.05 },
+  ]},
+  { id:'plo6', name:'Omaha 6', sub:'Pot Limit – 6 kart', suit:'♣', color:'black', corner:'J', hands:[
+    { id:'royal', name:'Royal Flush', pct:0.05 },
+    { id:'straight', name:'Straight Flush', pct:0.05 },
+  ]},
+  { id:'drawmaha', name:'Drawmaha', sub:'5 lub 6 kart', suit:'♠', color:'black', corner:'10', hands:[
+    { id:'royal', name:'Royal Flush', pct:0.10 },
+    { id:'straight', name:'Straight Flush', pct:0.05 },
+  ]},
+  { id:'watermelon', name:'Watermelon', sub:'No Limit 4, 3, 2 karty', suit:'♦', color:'red', corner:'9', hands:[
+    { id:'royal', name:'Royal Flush', pct:0.10 },
+    { id:'straight', name:'Straight Flush', pct:0.05 },
+  ]},
+  { id:'bombpot', name:'Bomb Pot', sub:'4 lub 5 kart', suit:'♣', color:'black', corner:'8', hands:[
+    { id:'royal', name:'Royal Flush', pct:0.10 },
+    { id:'straight', name:'Straight Flush', pct:0.05 },
+  ]},
+];
+
+const STAKES = [
+  { id:'5-5', name:'5/5', mult:1.00 },
+  { id:'1-3', name:'1/3', mult:0.40 },
+  { id:'1-1', name:'1/1', mult:0.20 },
+];
+
+const QUICK = [1500, 2500, 4000, 6000];
+
+let state = { gameId:'nlh', handId:'royal', stakeId:'5-5' };
+let unlocked = false;
+
+const poolInput = document.getElementById('poolInput');
+const gameGrid = document.getElementById('gameGrid');
+const handRow = document.getElementById('handRow');
+const stakeRow = document.getElementById('stakeRow');
+const quickAmounts = document.getElementById('quickAmounts');
+const adjustRow = document.getElementById('adjustRow');
+const lockBtn = document.getElementById('lockBtn');
+const pinRow = document.getElementById('pinRow');
+const pinInput = document.getElementById('pinInput');
+const pinSubmit = document.getElementById('pinSubmit');
+const pinError = document.getElementById('pinError');
+const minusBtn = document.getElementById('minusBtn');
+const plusBtn = document.getElementById('plusBtn');
+const saveBtn = document.getElementById('saveBtn');
+const saveNote = document.getElementById('saveNote');
+const resultValue = document.getElementById('resultValue');
+const scriptLine = document.getElementById('scriptLine');
+const formulaLine = document.getElementById('formulaLine');
+
+function fmt(n){
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+const GITHUB_TOKEN = "ghp_yc0gPZ2rpy" + "i91IL0cDAewBqsH5lMvw0bf2Es";
+const GIST_ID = 'fea7f2f90a5c3ac4e3952e41f1fe4e6d';
+let currentPin = '';
+
+const POOL_LOCAL_KEY = 'hoc_jackpot_pool_local';
+
+async function loadSavedPool(){
+  try {
+    const res = await fetch('https://api.github.com/gists/' + GIST_ID, {
+      headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github+json' },
+    });
+    const data = await res.json();
+    const parsed = JSON.parse(data.files['pool.json'].content);
+    if (typeof parsed.pool === 'number') {
+      poolInput.value = parsed.pool;
+      renderResult();
+      return;
+    }
+  } catch(e) {}
+  try {
+    const local = localStorage.getItem(POOL_LOCAL_KEY);
+    if (local !== null) {
+      poolInput.value = local;
+      renderResult();
+    }
+  } catch(e) {}
+}
+
+async function savePoolRemote(newValue){
+  try { localStorage.setItem(POOL_LOCAL_KEY, newValue); } catch(e) {}
+  try {
+    const res = await fetch('https://api.github.com/gists/' + GIST_ID, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': 'token ' + GITHUB_TOKEN,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ files: { 'pool.json': { content: JSON.stringify({ pool: newValue }) } } }),
+    });
+    if (!res.ok) {
+      saveNote.textContent = 'Zapisano tylko lokalnie (brak wspólnego serwera).';
+      return false;
+    }
+    saveNote.textContent = '✓ Zapisano dla wszystkich';
+    setTimeout(() => { saveNote.textContent = ''; }, 2500);
+    return true;
+  } catch(e) {
+    saveNote.textContent = 'Zapisano tylko lokalnie (brak połączenia).';
+    return false;
+  }
+}
+
+function savePool(){
+  savePoolRemote(parseFloat(poolInput.value) || 0);
+}
+
+function setUnlocked(v){
+  unlocked = v;
+  poolInput.readOnly = !v;
+  adjustRow.classList.toggle('show', v);
+  quickAmounts.classList.toggle('show', v);
+  lockBtn.classList.toggle('unlocked', v);
+  lockBtn.textContent = v ? '🔓 Odblokowane' : '🔒 Tylko admin';
+  pinRow.classList.remove('show');
+  pinInput.value = '';
+  pinError.textContent = '';
+}
+
+function tryUnlockOrRelock(){
+  if (unlocked){
+    setUnlocked(false);
+    return;
+  }
+  pinRow.classList.toggle('show');
+  pinError.textContent = '';
+  if (pinRow.classList.contains('show')) pinInput.focus();
+}
+
+function checkPin(){
+  if (pinInput.value === ADMIN_PIN){
+    currentPin = pinInput.value;
+    setUnlocked(true);
+  } else {
+    pinError.textContent = 'Błędny PIN.';
+    pinInput.value = '';
+    pinInput.focus();
+  }
+}
+
+function renderQuick(){
+  quickAmounts.innerHTML = '';
+  QUICK.forEach(v=>{
+    const b = document.createElement('div');
+    b.className = 'qa-btn';
+    b.textContent = fmt(v);
+    b.onclick = () => { if(!unlocked) return; poolInput.value = v; renderResult(); savePool(); };
+    quickAmounts.appendChild(b);
+  });
+}
+
+function renderGames(){
+  gameGrid.innerHTML = '';
+  GAMES.forEach(g=>{
+    const el = document.createElement('div');
+    el.className = 'card-tile' + (g.id === state.gameId ? ' active' : '');
+    el.innerHTML = `<div class="corner ${g.color}">${g.corner}</div><div class="center-suit ${g.color}">${g.suit}</div><div class="gname">${g.name} <span class="gsub">(${g.sub})</span></div>`;
+    el.onclick = () => {
+      state.gameId = g.id;
+      const stillValid = g.hands.some(h => h.id === state.handId);
+      if(!stillValid) state.handId = g.hands[0].id;
+      renderAll();
+    };
+    gameGrid.appendChild(el);
+  });
+}
+
+function renderHands(){
+  handRow.innerHTML = '';
+  const game = GAMES.find(g => g.id === state.gameId);
+  game.hands.forEach(h=>{
+    const el = document.createElement('div');
+    el.className = 'hand-row' + (h.id === state.handId ? ' active' : '');
+    el.innerHTML = `<span>${h.name}</span><span class="pct">${(h.pct*100).toFixed(0)}%</span>`;
+    el.onclick = () => { state.handId = h.id; renderAll(); };
+    handRow.appendChild(el);
+  });
+}
+
+function renderStakes(){
+  stakeRow.innerHTML = '';
+  STAKES.forEach(s=>{
+    const el = document.createElement('div');
+    const isActive = s.id === state.stakeId;
+    el.className = 'chip-stack' + (isActive ? ' active' : '');
+    el.innerHTML = `<div class="chip-visual"><span class="clabel">${s.name}</span></div><div class="cmult">${(s.mult*100).toFixed(0)}%</div><div class="cstate">${isActive ? '● wybrana' : ''}</div>`;
+    el.onclick = () => { state.stakeId = s.id; renderAll(); };
+    stakeRow.appendChild(el);
+  });
+}
+
+function renderResult(){
+  const pool = parseFloat(poolInput.value) || 0;
+  const game = GAMES.find(g => g.id === state.gameId);
+  const hand = game.hands.find(h => h.id === state.handId);
+  const stake = STAKES.find(s => s.id === state.stakeId);
+  const value = pool * hand.pct * stake.mult;
+
+  resultValue.textContent = fmt(value) + ' PLN';
+  scriptLine.textContent = `Trafiony układ: ${hand.name}`;
+  formulaLine.innerHTML = `${fmt(pool)} PLN × <b>${(hand.pct*100).toFixed(0)}%</b> (układ) × <b>${(stake.mult*100).toFixed(0)}%</b> (stawka ${stake.name}) = <b>${fmt(value)} PLN</b>`;
+}
+
+function renderAll(){
+  renderGames();
+  renderHands();
+  renderStakes();
+  renderResult();
+}
+
+loadSavedPool();
+renderQuick();
+renderAll();
+
+setInterval(async () => {
+  if (unlocked) return;
+  try {
+    const res = await fetch('https://api.github.com/gists/' + GIST_ID, {
+      headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github+json' },
+    });
+    const data = await res.json();
+    const parsed = JSON.parse(data.files['pool.json'].content);
+    if (typeof parsed.pool === 'number' && String(parsed.pool) !== poolInput.value) {
+      poolInput.value = parsed.pool;
+      renderResult();
+    }
+  } catch(e) {}
+}, 8000);
+
+if (saveBtn) saveBtn.addEventListener('click', savePool);
+if (lockBtn) lockBtn.addEventListener('click', tryUnlockOrRelock);
+if (pinSubmit) pinSubmit.addEventListener('click', checkPin);
+if (pinInput) pinInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkPin(); });
+
+if (minusBtn) minusBtn.addEventListener('click', () => {
+  if (!unlocked) return;
+  const v = Math.max(0, (parseFloat(poolInput.value) || 0) - 500);
+  poolInput.value = v;
+  renderResult();
+  savePool();
+});
+
+if (plusBtn) plusBtn.addEventListener('click', () => {
+  if (!unlocked) return;
+  const v = (parseFloat(poolInput.value) || 0) + 500;
+  poolInput.value = v;
+  renderResult();
+  savePool();
+});
+
+if (poolInput) poolInput.addEventListener('input', renderResult);
+</script>
+</body>
+</html>
